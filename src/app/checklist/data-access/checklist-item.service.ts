@@ -1,11 +1,14 @@
-import { Injectable, computed, signal } from "@angular/core";
+import { Injectable, computed, effect, inject, signal } from "@angular/core";
 import { AddChecklistItem, ChecklistItem, RemoveChecklistItem } from "../../shared/interfaces/checklist-item";
 import { Subject, tap } from "rxjs";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { RemoveChecklist } from "../../shared/interfaces/checklist";
+import { StorageService } from "../../shared/data-access/storage.service";
 
 export interface ChecklistItemState {
   checklistItems: ChecklistItem[];
+  loaded: boolean,
+  error: string | null
 }
 
 @Injectable({
@@ -13,20 +16,27 @@ export interface ChecklistItemState {
 })
 export class ChecklistItemService {
 
+  storageService = inject(StorageService);
+
   // State
   #state = signal<ChecklistItemState>({
-    checklistItems: []
+    checklistItems: [],
+    loaded: false,
+    error: null
   });
 
   // Selectors
   checklistItems = computed(() => this.#state().checklistItems);
+  loaded = computed(() => this.#state().loaded);
 
   // source
   add$ = new Subject<AddChecklistItem>();
 
+  #checklistItemsLoaded$ = this.storageService.loadChecklistItems();
+
   toggle$ = new Subject<RemoveChecklistItem>();
 
-  toggleAll$ = new Subject<RemoveChecklist[]>();
+  reset$ = new Subject<RemoveChecklist>();
 
   // reducers
   constructor() {
@@ -58,19 +68,31 @@ export class ChecklistItemService {
       }));
     });
 
-    this.toggleAll$.pipe(takeUntilDestroyed(), tap(console.log))
-    .subscribe((checklistIds) => {
+    this.reset$.pipe(takeUntilDestroyed())
+    .subscribe((checklistId) => {
       this.#state.update((state) =>({
         ...state,
         checklistItems: state.checklistItems.map(item =>
-          item.checklistId === checklistIds ?
+          item.checklistId === checklistId ?
              {
               ...item,
-              checked: true
+              checked: false
             }
           : item
         )
       }));
+    });
+
+    this.#checklistItemsLoaded$.pipe(takeUntilDestroyed())
+    .subscribe({
+      next: (checklistItems) => this.#state.update(state => ({...state, checklistItems, loaded: true})),
+      error: (error) => this.#state.update((state) => ({...state, error}))
+    });
+
+    effect(() => {
+      if (this.loaded()){ // to prevent us from overwriting our saved data with empty arrays
+        this.storageService.saveCheckList(this.checklistItems());
+      }
     });
   }
 

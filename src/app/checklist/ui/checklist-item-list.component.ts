@@ -13,11 +13,10 @@ import { ChecklistItem, RemoveChecklistItem } from "../../shared/interfaces/chec
           @if (checklistItem.checked) {
             <span>✅</span>
           }
-          {{checklistItem.title}}
-        </div>
-        <div>
+          <p>{{checklistItem.title}}</p>
           <button (click)="toggle.emit(checklistItem.id)">Toggle</button>
         </div>
+
       </li>
     } @empty {
       <li>
@@ -34,6 +33,5 @@ import { ChecklistItem, RemoveChecklistItem } from "../../shared/interfaces/chec
 export class ChecklistItemListComponent {
   @Input({ required: true}) checklistItems!: ChecklistItem[];
   @Output() toggle = new EventEmitter<RemoveChecklistItem>;
-  @Output() toggleAll = new EventEmitter<RemoveChecklistItem[]>;
 
 }

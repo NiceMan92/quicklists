@@ -1,6 +1,6 @@
 import { RouterLink } from '@angular/router';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Checklist } from '../../shared/interfaces/checklist';
+import { Checklist, RemoveChecklist } from '../../shared/interfaces/checklist';
 
 @Component({
   standalone: true,
@@ -13,6 +13,7 @@ import { Checklist } from '../../shared/interfaces/checklist';
       </h1>
       <div>
         <button (click)="addItem.emit();">Add Item</button>
+        <button (click)="reset.emit(checklist.id);">Reset</button>
       </div>
     </header>
   `,
@@ -21,5 +22,5 @@ import { Checklist } from '../../shared/interfaces/checklist';
 export class ChecklistHeaderComponent {
   @Input({ required: true }) checklist!: Checklist;
   @Output() addItem = new EventEmitter<void>();
-
+  @Output() reset = new EventEmitter<RemoveChecklist>();
 }
