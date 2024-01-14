@@ -12,7 +12,7 @@ import { RouterLink } from "@angular/router";
           <a [routerLink]="['/checklist',checklist.id]">{{checklist.title}}</a>
         </li>
       } @empty {
-        <li>nothing to do</li>
+        <li>Please click the on "Add Checklist" button to create a new one</li>
       }
     </ul>
   `,
